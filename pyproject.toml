@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "enterprise-mind-ai"
+version = "0.1.0"
+description = "Enterprise knowledge and workflow automation platform scaffold"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["enterprise_mind*"]
+namespaces = false
+
+# Tool configuration only: these tools are not installed or dependencies yet.
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+strict = true
