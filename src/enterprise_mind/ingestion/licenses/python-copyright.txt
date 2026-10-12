@@ -1,0 +1,18 @@
+Python and this documentation is:
+
+Copyright © 2001-2023 Python Software Foundation. All rights reserved.
+Copyright © 2000 BeOpen.com. All rights reserved.
+Copyright © 1995-2000 Corporation for National Research Initiatives. All rights reserved.
+Copyright © 1991-1995 Stichting Mathematisch Centrum. All rights reserved.
+
+Documentation footer: © Copyright 2001-2026, Python Software Foundation.
+
+Original document: https://docs.python.org/3.12/tutorial/index.html
+License evidence: https://docs.python.org/3.12/license.html
+Copyright evidence: https://docs.python.org/3.12/copyright.html
+Reviewed: 2026-10-11
+
+This collection selects PSF License Version 2 for documentation and its code
+examples. The code examples' alternative Zero-Clause BSD license does not
+relicense the documentation prose. These notices do not grant endorsement rights.
+Preserve any additional document-specific notices in the unchanged source HTML.

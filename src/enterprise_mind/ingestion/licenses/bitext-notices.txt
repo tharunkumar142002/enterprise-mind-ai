@@ -1,0 +1,22 @@
+Bitext Sample Customer Support Training Dataset 27K responses v11
+Credit: Bitext Innovations.
+Original source: https://raw.githubusercontent.com/bitext/customer-support-llm-chatbot-training-dataset/main/data/Bitext_Sample_Customer_Support_Training_Dataset_27K_responses-v11.csv
+Publisher repository: https://github.com/bitext/customer-support-llm-chatbot-training-dataset
+License evidence: https://github.com/bitext/customer-support-llm-chatbot-training-dataset/blob/main/LICENSE.txt
+Applicable license: Community Data License Agreement - Sharing - Version 1.0.
+Full terms: https://cdla.dev/sharing-1-0/
+Provenance: publisher-provided hybrid synthetic customer-support examples,
+using natural seed text and generated variants. These are not real support
+ticket records and are not project-authored fictional enterprise records.
+Published Data and Enhanced Data must remain under the unmodified CDLA-Sharing
+agreement. Preserve provider credits, notices, metadata and practical source links.
+Enhanced Data files need prominent modification notices. Do not impose further
+restrictions, including commercial, platform or technology restrictions.
+Results contain no more than a de minimis portion of the Data; copying examples
+into RAG responses is not automatically exempt as Results.
+Section 4 provider representations are not an independent privacy/rights audit.
+Inspect authorized payloads for unexpected personal/confidential or third-party
+material before indexing or publication. Collection does not authorize training
+or unrestricted redistribution. No provider copyright year has been invented.
+This notice is a project-authored attribution/review summary, not replacement terms.
+Reviewed: 2026-10-11. Changes: none; original bytes must remain unchanged.

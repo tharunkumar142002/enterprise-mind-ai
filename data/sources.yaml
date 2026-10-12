@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "manifest_id": "em-002-public-candidates-v1",
+  "researched_on": "2026-10-11",
+  "allowlisted_urls": [
+    "https://docs.python.org/3.12/tutorial/index.html",
+    "https://help.gnome.org/gnome-help/net-problem.html",
+    "https://www.govinfo.gov/content/pkg/CFR-2025-title41-vol4/pdf/CFR-2025-title41-vol4-subtitleF.pdf",
+    "https://books.libreoffice.org/en/WG252/WG2500-Preface.html",
+    "https://raw.githubusercontent.com/bitext/customer-support-llm-chatbot-training-dataset/main/data/Bitext_Sample_Customer_Support_Training_Dataset_27K_responses-v11.csv"
+  ],
+  "sources": [
+    {
+      "source_id": "hr-gitlab-people",
+      "name": "GitLab public People Group handbook",
+      "title": "People Group",
+      "url": "https://handbook.gitlab.com/handbook/people-group/",
+      "category": "human_resources",
+      "format": "html",
+      "version": "live-page-unpinned",
+      "access_classification": "public",
+      "expected_sha256": null,
+      "max_bytes": 5242880,
+      "license": {
+        "name": "Creative Commons Attribution-ShareAlike 4.0 International",
+        "identifier": "CC-BY-SA-4.0",
+        "url": "https://handbook.gitlab.com/handbook/about/handbook-usage/",
+        "status": "verified",
+        "attribution": "GitLab public handbook contributors; retain source URL, license and change notices.",
+        "notes": "Publisher explicitly licenses the public handbook under CC-BY-SA-4.0. Full terms and source-specific notices are bundled. Retain attribution, source/license links, change notices and share-alike on distributed adaptations. Exact page contains individual handles and contact-routing details; privacy clearance is not complete."
+      },
+      "verification": {
+        "status": "pending_review",
+        "checked_on": "2026-10-11",
+        "evidence_urls": [
+          "https://handbook.gitlab.com/handbook/people-group/",
+          "https://handbook.gitlab.com/handbook/about/handbook-usage/"
+        ],
+        "notes": "Header review: HTTP 200, text/html, 2384068 declared bytes, no redirect. Public body reviewed for HR workflows; individual handles, contact-routing table, complaint contacts and internal destinations require exclusion/redaction. Raw collector does not sanitize; collection stays blocked until the privacy decision is reviewed. No linked pages or employee profiles may be collected."
+      },
+      "approval": {
+        "approved": false,
+        "approved_by": null,
+        "approved_at": null,
+        "allowed_uses": []
+      },
+      "provenance": {
+        "kind": "public_document",
+        "publisher": "GitLab",
+        "notes": "Publisher-authored HR workflow seed, not EnterpriseMind company policy. Selected by project owner; privacy clearance and collection approval remain separate. See docs/data/source-readiness.md."
+      }
+    },
+    {
+      "source_id": "it-gnome-network",
+      "name": "GNOME Network Problems",
+      "title": "Network problems",
+      "url": "https://help.gnome.org/gnome-help/net-problem.html",
+      "category": "it_support",
+      "format": "html",
+      "version": "live-gnome-help-page-unpinned",
+      "access_classification": "public",
+      "expected_sha256": null,
+      "max_bytes": 5242880,
+      "license": {
+        "name": "Creative Commons Attribution-ShareAlike 3.0 Unported",
+        "identifier": "CC-BY-SA-3.0",
+        "url": "https://github.com/GNOME/gnome-user-docs/blob/master/gnome-help/C/legal.xml",
+        "status": "verified",
+        "attribution": "The Ubuntu Documentation Team; GNOME Help Network problems; retain source URL, CC-BY-SA-3.0 terms and modification notices.",
+        "notes": "Exact upstream net-problem.page includes legal.xml via XInclude; legal.xml specifies CC-BY-SA-3.0. Page credits The Ubuntu Documentation Team. Full unmodified license text and source-specific notices are bundled; preserve attribution/share-alike on distributed adaptations. No copyright year inferred."
+      },
+      "verification": {
+        "status": "verified",
+        "checked_on": "2026-10-11",
+        "evidence_urls": [
+          "https://help.gnome.org/gnome-help/net-problem.html",
+          "https://github.com/GNOME/gnome-user-docs/blob/master/gnome-help/C/net-problem.page",
+          "https://github.com/GNOME/gnome-user-docs/blob/master/gnome-help/C/legal.xml",
+          "https://api.github.com/repos/GNOME/gnome-user-docs/contents/gnome-help/C/net-problem.page"
+        ],
+        "notes": "HTTP 200 HTML, 10674 declared bytes, no redirect in header review. Official source metadata read on 2026-10-11 confirms page ID net-problem, title Network problems, author credit and legal.xml inclusion; page Git blob a914344cedb8d8628a22d52fb4745575de8f7cb4 is evidence, not an HTML checksum. This is a troubleshooting index only; linked articles require separate approval. Live HTML has not been collected."
+      },
+      "approval": {
+        "approved": true,
+        "approved_by": "Project owner via explicit EM-002 source authorization; recorded by Codex",
+        "approved_at": "2026-10-11T15:23:07+00:00",
+        "allowed_uses": [
+          "collection_for_rag"
+        ]
+      },
+      "provenance": {
+        "kind": "public_document",
+        "publisher": "GNOME documentation project; The Ubuntu Documentation Team",
+        "notes": "Public network troubleshooting index replacing the unavailable Ubuntu endpoint. Original HTML source and license inclusion evidence preserved; not fictional company IT policy."
+      }
+    },
+    {
+      "source_id": "finance-govinfo-ftr-2025",
+      "name": "GovInfo Federal Travel Regulation, July 2025 edition",
+      "title": "41 CFR Subtitle F - Federal Travel Regulation System (July 1, 2025 edition)",
+      "url": "https://www.govinfo.gov/content/pkg/CFR-2025-title41-vol4/pdf/CFR-2025-title41-vol4-subtitleF.pdf",
+      "category": "finance",
+      "format": "pdf",
+      "version": "CFR-2025-title41-vol4-subtitleF-2025-07-01",
+      "access_classification": "public",
+      "expected_sha256": null,
+      "max_bytes": 5242880,
+      "license": {
+        "name": "U.S. federal government regulatory text; 17 U.S.C. 105 reuse basis with third-party exceptions",
+        "identifier": "LicenseRef-US-Government-Work",
+        "url": "https://www.govinfo.gov/about/policies",
+        "status": "verified",
+        "attribution": "U.S. General Services Administration; Office of the Federal Register, National Archives and Records Administration; U.S. Government Publishing Office; 41 CFR Subtitle F, July 1, 2025 edition; retain original source and item-specific notices.",
+        "notes": "LicenseRef-US-Government-Work is a project-local identifier, not an invented publisher SPDX license. GovInfo describes U.S. government works as public domain under U.S. law and excludes protected third-party material. Preserve reuse basis and attribution; inspect any unexpected third-party notices after authorized collection before extraction/distribution. No blanket worldwide clearance, endorsement or current-law claim."
+      },
+      "verification": {
+        "status": "verified",
+        "checked_on": "2026-10-11",
+        "evidence_urls": [
+          "https://www.govinfo.gov/content/pkg/CFR-2025-title41-vol4/pdf/CFR-2025-title41-vol4-subtitleF.pdf",
+          "https://www.govinfo.gov/about/policies",
+          "https://www.govinfo.gov/metadata/pkg/CFR-2025-title41-vol4/mods.xml",
+          "https://www.govinfo.gov/app/collection/cfr/2025/"
+        ],
+        "notes": "HTTP 200 application/pdf, 1060666 declared bytes, no redirect in header review. Official MODS metadata dateIssued is 2025-07-01 and preferred citation is Code of Federal Regulations Title 41, Volume 4, July 1, 2025. This is an edition/revision date, not an inferred production release or individual rule effective date. Historical U.S. federal reference; not current 2026 law or Indian/company reimbursement policy. PDF payload is not collected."
+      },
+      "approval": {
+        "approved": true,
+        "approved_by": "Project owner via explicit EM-002 source authorization; recorded by Codex",
+        "approved_at": "2026-10-11T15:23:07+00:00",
+        "allowed_uses": [
+          "collection_for_rag"
+        ]
+      },
+      "provenance": {
+        "kind": "public_document",
+        "publisher": "Office of the Federal Register, National Archives and Records Administration; GovInfo/GPO; GSA regulation",
+        "notes": "publication_date=2025-07-01 (GovInfo MODS dateIssued/edition date); jurisdiction=United States federal; historical_reference=true; current_law_claim=false. Structured values are embedded by the reviewed preservation binding at collection. No corpus PDF has been downloaded."
+      }
+    },
+    {
+      "source_id": "product-libreoffice-writer",
+      "name": "LibreOffice Writer Guide 25.2 preface and FAQs",
+      "title": "Writer Guide 25.2 - Preface",
+      "url": "https://books.libreoffice.org/en/WG252/WG2500-Preface.html",
+      "category": "product_documentation",
+      "format": "html",
+      "version": "writer-guide-25.2",
+      "access_classification": "public",
+      "expected_sha256": null,
+      "max_bytes": 5242880,
+      "license": {
+        "name": "Publisher permits GPL version 3 or later OR Creative Commons Attribution version 4.0 or later",
+        "identifier": "CC-BY-4.0",
+        "url": "https://books.libreoffice.org/en/WG252/WG2500-Preface.html",
+        "status": "verified",
+        "attribution": "LibreOffice Documentation Team and listed contributors, 2025; source URL, attribution license and modification notices.",
+        "notes": "Publisher copyright section permits GPL-3-or-later OR CC Attribution 4.0-or-later; select CC-BY-4.0 for documentation. Full terms, 2025 Documentation Team copyright and all listed contributor credits are bundled. Preserve attribution, source/license and modification notices. Software licenses and trademarks are separate; only this preface is selected."
+      },
+      "verification": {
+        "status": "verified",
+        "checked_on": "2026-10-11",
+        "evidence_urls": [
+          "https://books.libreoffice.org/en/WG252/WG2500-Preface.html",
+          "https://creativecommons.org/licenses/by/4.0/legalcode.txt"
+        ],
+        "notes": "Official page title, copyright/contributors, February 2025 publication and LibreOffice 25.2 version inspected. Header review returned HTTP 200 text/html, 49757 declared bytes, no redirect. Preface/FAQ seed only; no linked chapters/assets implicitly authorized. Full payload checksum remains a collection-time check."
+      },
+      "approval": {
+        "approved": true,
+        "approved_by": "Project owner via explicit EM-002 source authorization; recorded by Codex",
+        "approved_at": "2026-10-11T15:23:07+00:00",
+        "allowed_uses": [
+          "collection_for_rag"
+        ]
+      },
+      "provenance": {
+        "kind": "public_document",
+        "publisher": "LibreOffice Documentation Team",
+        "notes": "Public product preface/FAQ, February 2025, version 25.2; not a full guide. Reviewed CC-BY-4.0 license selection; full terms and attribution preserved locally."
+      }
+    },
+    {
+      "source_id": "support-bitext-v11",
+      "name": "Bitext customer-support hybrid synthetic dataset v11",
+      "title": "Bitext Sample Customer Support Training Dataset 27K responses v11",
+      "url": "https://raw.githubusercontent.com/bitext/customer-support-llm-chatbot-training-dataset/main/data/Bitext_Sample_Customer_Support_Training_Dataset_27K_responses-v11.csv",
+      "category": "customer_support",
+      "format": "csv",
+      "version": "v11-official-github-main-with-publisher-checksum",
+      "access_classification": "public",
+      "expected_sha256": "6f81102b0100b97b8468eb04368033a23206bf1fde9d53500d5806ec1001a434",
+      "max_bytes": 20971520,
+      "license": {
+        "name": "Community Data License Agreement - Sharing - Version 1.0",
+        "identifier": "CDLA-Sharing-1.0",
+        "url": "https://github.com/bitext/customer-support-llm-chatbot-training-dataset/blob/main/LICENSE.txt",
+        "status": "verified",
+        "attribution": "Bitext Innovations; Bitext Sample Customer Support Training Dataset 27K responses v11; retain publisher credit, metadata, source links and CDLA-Sharing-1.0 terms.",
+        "notes": "Official publisher repository includes full CDLA-Sharing-1.0 terms. Preserve provider credits; published Data/Enhanced Data remain under the unmodified agreement and changes need prominent notices. No additional commercial/platform restrictions. Results exception excludes more than de minimis Data; RAG example quotation is not automatically exempt. Provider representations do not replace privacy/seed-rights inspection of an authorized payload before indexing/publication."
+      },
+      "verification": {
+        "status": "verified",
+        "checked_on": "2026-10-11",
+        "evidence_urls": [
+          "https://raw.githubusercontent.com/bitext/customer-support-llm-chatbot-training-dataset/main/data/Bitext_Sample_Customer_Support_Training_Dataset_27K_responses-v11.csv",
+          "https://github.com/bitext/customer-support-llm-chatbot-training-dataset/blob/main/LICENSE.txt",
+          "https://github.com/bitext/customer-support-llm-chatbot-training-dataset/tree/main/data",
+          "https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset/blob/main/Bitext_Sample_Customer_Support_Training_Dataset_27K_responses-v11.csv",
+          "https://cdla.dev/sharing-1-0/"
+        ],
+        "notes": "Official publisher direct CSV endpoint: HTTP 200 text/plain; charset=utf-8, 19202474 declared bytes, no redirect/query. Collector permits text/plain CSV. Per-source limit reduced to 20971520 (20 MiB); execution must explicitly select the same or lower limit. Existing publisher SHA-256 retained from HF file metadata; mirror byte identity is not assumed and must pass that pin during authorized collection. main remains mutable; no dataset payload fetched."
+      },
+      "approval": {
+        "approved": true,
+        "approved_by": "Project owner via explicit EM-002 source authorization; recorded by Codex",
+        "approved_at": "2026-10-11T15:23:07+00:00",
+        "allowed_uses": [
+          "collection_for_rag"
+        ]
+      },
+      "provenance": {
+        "kind": "public_synthetic_dataset",
+        "publisher": "Bitext Innovations",
+        "notes": "Publisher-provided hybrid synthetic methodology using natural seed text and generated variants. Not real tickets and not project-authored fictional data. Preserve CDLA-Sharing obligations and review unexpected PII/third-party content before indexing. Direct official GitHub delivery replaces the redirecting HF URL."
+      }
+    },
+    {
+      "source_id": "technical-python-tutorial",
+      "name": "Python 3.12 official tutorial",
+      "title": "The Python Tutorial",
+      "url": "https://docs.python.org/3.12/tutorial/index.html",
+      "category": "technical_documentation",
+      "format": "html",
+      "version": "python-3.12-live-documentation",
+      "access_classification": "public",
+      "expected_sha256": null,
+      "max_bytes": 5242880,
+      "license": {
+        "name": "Python Software Foundation License Version 2; documentation code additionally permits Zero-Clause BSD",
+        "identifier": "PSF-2.0",
+        "url": "https://docs.python.org/3.12/license.html",
+        "status": "verified",
+        "attribution": "Python Software Foundation and other listed copyright holders; retain copyright/license notices and change summary where required.",
+        "notes": "Official tutorial footer and licensing page confirm PSF-2.0 for this document. All eight preserved PSF clauses match official wording after whitespace normalization; all four official copyright notices and the 2001-2026 footer are preserved. PSF-2.0 is selected for prose and code; the code-only 0BSD alternative does not relicense prose. Retain full terms, attribution and notices; summarize distributed modifications and do not imply PSF endorsement."
+      },
+      "verification": {
+        "status": "verified",
+        "checked_on": "2026-10-11",
+        "evidence_urls": [
+          "https://docs.python.org/3.12/tutorial/index.html",
+          "https://docs.python.org/3.12/license.html",
+          "https://docs.python.org/3.12/copyright.html"
+        ],
+        "notes": "Reviewed official tutorial content, footer, license and copyright pages on 2026-10-11. Header-only check of the exact URL returned HTTP 200, text/html, Content-Length 35271, no redirect Location and no Content-Encoding; no corpus body was downloaded by the collector. Preserved terms/notices match official evidence. Approval is limited to this one raw HTML index for collection_for_rag; linked chapters/assets, training and publication are outside its scope. User authorized recording this approval but requires a separate explicit instruction before executing the download. GET bytes/checksum remain unverified until that authorized run; the live 3.12 alias can change and will be SHA-256 versioned."
+      },
+      "approval": {
+        "approved": true,
+        "approved_by": "Project owner via explicit user instruction; source review performed by Codex",
+        "approved_at": "2026-10-11T13:25:17+00:00",
+        "allowed_uses": ["collection_for_rag"]
+      },
+      "provenance": {
+        "kind": "public_document",
+        "publisher": "Python Software Foundation and Python documentation contributors",
+        "notes": "Public technical documentation seed; no downloaded corpus file."
+      }
+    }
+  ]
+}
