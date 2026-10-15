@@ -86,6 +86,26 @@ The manifest records evidence; it does not perform legal judgment or establish
 cryptographic reviewer identity. An approved manifest is trusted, reviewed project
 configuration. Only an authorized reviewer may change approval/allowlist fields.
 
+## Supported collection-record schema
+
+Collection reuse and distribution preparation accept only integer
+`schema_version: 1`. Records must contain `document_id`, `source_id`, `source_url`,
+`title`, `category`, `format`, `collected_at`, `license`, `checksum`, `version`,
+`source_version`, `access_classification`, `provenance`, `size_bytes`, `blob_path`
+and `transfer`. Unknown fields, duplicate JSON keys, non-JSON numbers, malformed
+Unicode and records over 1 MiB fail closed. `collected_at` must be a valid RFC 3339
+timestamp with a timezone, seconds and at most six fractional digits. Existing
+valid timestamps and transfer validators are retained on repeat collection.
+
+The original schema-1 variants remain supported: `license_preservation` may be
+absent for sources without bundled terms; `provenance.source_metadata` is present
+for bindings with additional reviewed context. Distribution requires a complete
+reviewed license bundle. Mandatory provenance fields are `kind`, `publisher`,
+`notes`, `verification`, `approval`, `manifest_sha256`, `original_source_url` and
+`license_attribution`. Metadata is checked against the archived manifest and the
+reviewed license binding. No other schema version or incomplete legacy record is
+accepted or automatically migrated. Existing downloaded artifacts are not rewritten.
+
 ## Offline usage
 
 Run from the repository root with an existing working Python 3.12 interpreter:
@@ -143,6 +163,9 @@ summaries are pinned by normalized UTF-8 SHA-256; modified, missing, empty or ov
 64 KiB resources fail before network calls or writes. Terms are unmodified legal
 texts; summaries do not replace them. GovInfo uses an explicitly local reuse-basis
 identifier and notice, rather than claiming a publisher SPDX license.
+The Python PSF license and copyright resources use the same bounded-read, 64 KiB
+limit and pinned-hash checks. Only checkout newline normalization is permitted;
+the bundled legal texts are unchanged.
 
 The package includes the full eight-clause [PSF License Version 2 text](../../src/enterprise_mind/ingestion/licenses/PSF-2.0.txt)
 and [copyright notices](../../src/enterprise_mind/ingestion/licenses/python-copyright.txt),
@@ -210,7 +233,17 @@ under [EM-002-F05](../project/backlog.md#em-002-f05-rights-and-intended-use-appr
   Redirects and non-200 responses fail; no hidden retries or CDN fallback.
 - Default request/body budget is 15 seconds (`--timeout-seconds`, maximum 60).
   DNS caller waiting is bounded using a daemon worker; OS resolver work can persist
-  briefly after a timeout. Streams have a deadline and socket read timeouts.
+  briefly after a timeout. The watchdog records expiration and interrupts sockets
+  during headers and body reads. Deadlines are checked after each read (including
+  EOF/final bytes), after transport cleanup and before artifact publication.
+- The HTTPS transport supports only a single decimal `Content-Length` frame.
+  Conflicting/duplicate/malformed framing headers, all `Transfer-Encoding`
+  values (including chunked), malformed parsed headers and lengthless HTTP 200
+  responses are rejected. This deliberately excludes connection-close framing,
+  whose early EOF cannot prove a complete document. A later framing extension
+  requires its own complete-body validation and regression tests. Injected test
+  transports provide complete in-memory bodies; they must report incomplete
+  bodies as errors rather than clean EOF.
 - Default global size cap is 5 MiB (`--max-bytes`, maximum 32 MiB). Apply the lower
   of global/source caps, checking both declared length and streamed bytes. Reject
   empty/truncated transfers, MIME mismatches and compressed bodies.

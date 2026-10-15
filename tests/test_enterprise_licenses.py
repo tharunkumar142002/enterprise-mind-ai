@@ -150,7 +150,8 @@ class EnterpriseLicenseTests(unittest.TestCase):
             for text in ("altered", "", "x" * 65_537):
                 with self.subTest(source=source_id, text_size=len(text)):
                     with patch("enterprise_mind.ingestion.licensing.files") as assets:
-                        assets.return_value.joinpath.return_value.joinpath.return_value.read_text.return_value = text
+                        resource = assets.return_value.joinpath.return_value.joinpath.return_value
+                        resource.open.return_value.__enter__.return_value.read.return_value = text
                         transport = FakeTransport()
                         with self.assertRaises(CollectionError):
                             collect(validate_manifest(fixture(source_id)), [source_id],

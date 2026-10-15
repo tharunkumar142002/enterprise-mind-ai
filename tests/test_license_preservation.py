@@ -1,17 +1,20 @@
 """License preservation tests use fictional HTML and never contact the source."""
 
 import hashlib
+import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from collection_fixtures import FakeTransport, manifest_data
 from enterprise_mind.ingestion.collector import CollectionError, collect
 from enterprise_mind.ingestion.distribution import prepare_distribution
 from enterprise_mind.ingestion.licensing import (
+    MAX_LICENSE_BYTES,
     PYTHON_LICENSE_URL,
+    PYTHON_RESOURCE_HASHES,
     PYTHON_SOURCE_ID,
     PYTHON_SOURCE_URL,
     license_preservation,
@@ -158,6 +161,82 @@ class LicensePreservationTests(unittest.TestCase):
                 self.collect_fixture()
         self.assertFalse(self.transport.calls)
         self.assertFalse((self.workspace / "data").exists())
+
+    def test_python_terms_and_copyright_pins_reject_alteration_and_oversize(self):
+        directory = Path(__file__).resolve().parents[1] / "src/enterprise_mind/ingestion/licenses"
+        originals = {name: (directory / name).read_text(encoding="utf-8")
+                     for name in PYTHON_RESOURCE_HASHES}
+        for filename in originals:
+            for replacement in ("altered fictional terms", "", "x" * (MAX_LICENSE_BYTES + 1),
+                                "\u00e9" * MAX_LICENSE_BYTES):
+                streams = []
+
+                def open_resource(name):
+                    resource = MagicMock()
+                    stream = io.StringIO(replacement if name == filename else originals[name])
+                    streams.append(stream)
+                    resource.open.return_value = stream
+                    return resource
+
+                with self.subTest(filename=filename, size=len(replacement)):
+                    with patch("enterprise_mind.ingestion.licensing.files") as assets:
+                        resources = assets.return_value.joinpath.return_value
+                        resources.joinpath.side_effect = open_resource
+                        with self.assertRaises(CollectionError):
+                            self.collect_fixture()
+                    self.assertTrue(all(stream.closed for stream in streams))
+                    self.assertFalse(self.transport.calls)
+                    self.assertFalse((self.workspace / "data").exists())
+
+    def test_python_resources_use_bounded_reads_and_preserve_reviewed_text(self):
+        directory = Path(__file__).resolve().parents[1] / "src/enterprise_mind/ingestion/licenses"
+        originals = {name: (directory / name).read_text(encoding="utf-8")
+                     for name in PYTHON_RESOURCE_HASHES}
+        streams = []
+
+        def resource(name):
+            asset = MagicMock()
+            stream = MagicMock(wraps=io.StringIO(originals[name]))
+            stream.__enter__.return_value = stream
+            streams.append(stream)
+            asset.open.return_value = stream
+            return asset
+
+        source = python_fixture()["sources"][0]
+        with patch("enterprise_mind.ingestion.licensing.files") as assets:
+            assets.return_value.joinpath.return_value.joinpath.side_effect = resource
+            preserved = license_preservation(PYTHON_SOURCE_ID, PYTHON_SOURCE_URL, source["license"])
+        for stream in streams:
+            stream.read.assert_called_once_with(MAX_LICENSE_BYTES + 1)
+        for key, filename in (("license", "PSF-2.0.txt"), ("notices", "python-copyright.txt")):
+            self.assertEqual(preserved[key]["text"], originals[filename])
+            self.assertEqual(preserved[key]["sha256"], PYTHON_RESOURCE_HASHES[filename])
+
+    def test_deadline_is_checked_before_license_and_record_publication(self):
+        # manifest, document, license, notices and record each have a flush.
+        for expires_on_flush in (3, 5):
+            now, flushes = [0], [0]
+
+            def delayed_fsync(descriptor):
+                flushes[0] += 1
+                if flushes[0] == expires_on_flush:
+                    now[0] = 16
+
+            with (self.subTest(expires_on_flush=expires_on_flush),
+                  tempfile.TemporaryDirectory() as folder):
+                self.workspace = Path(folder)
+                with patch("enterprise_mind.ingestion.collector.time.monotonic",
+                           side_effect=lambda: now[0]):
+                    with patch("enterprise_mind.ingestion.collector.os.fsync", delayed_fsync):
+                        with self.assertRaisesRegex(CollectionError, "deadline"):
+                            self.collect_fixture()
+                root = self.workspace / "data/raw"
+                self.assertFalse(list(root.glob("records/**/*.json")))
+                self.assertFalse(list(root.rglob(".record-*")))
+                self.assertFalse(list((root / ".staging").iterdir()))
+                self.assertFalse((root / ".collection.lock").exists())
+                if expires_on_flush == 3:
+                    self.assertFalse(list((root / "licenses").glob("*.txt")))
 
     def test_dry_run_and_unapproved_source_never_read_assets_or_use_network(self):
         data = python_fixture()

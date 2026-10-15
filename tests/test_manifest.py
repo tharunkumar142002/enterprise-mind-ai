@@ -169,6 +169,37 @@ class ManifestTests(unittest.TestCase):
             path.write_text(json.dumps(manifest_data(), indent=2), encoding="utf-8")
             self.assertEqual(load_manifest(path).sha256, validate_manifest(manifest_data()).sha256)
 
+    def test_lone_surrogates_in_values_and_keys_raise_manifest_error(self) -> None:
+        for scalar in ("\ud800", "\udfff", "prefix\udc00suffix"):
+            for location in ("title", "nested", "key"):
+                data = manifest_data()
+                if location == "title":
+                    data["sources"][0]["title"] = scalar
+                elif location == "nested":
+                    data["sources"][0]["provenance"]["notes"] = scalar
+                else:
+                    data[scalar] = "fictional"
+                with self.subTest(location=location, scalar=repr(scalar)):
+                    with self.assertRaisesRegex(ManifestError, "Unicode scalar"):
+                        validate_manifest(data)
+                    with tempfile.TemporaryDirectory() as folder:
+                        path = Path(folder) / "manifest.yaml"
+                        path.write_text(json.dumps(data, ensure_ascii=True), encoding="utf-8")
+                        with self.assertRaisesRegex(ManifestError, "Unicode scalar"):
+                            load_manifest(path)
+
+    def test_invalid_utf8_is_controlled_and_valid_surrogate_pairs_are_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "manifest.yaml"
+            path.write_bytes(b'{"title":"\xff"}')
+            with self.assertRaises(ManifestError):
+                load_manifest(path)
+            data = manifest_data()
+            data["sources"][0]["title"] = "Fictional \U0001f600 title"
+            # JSON escapes encode a supplementary scalar as a paired surrogate.
+            path.write_text(json.dumps(data, ensure_ascii=True), encoding="utf-8")
+            self.assertEqual(load_manifest(path).sources[0].title, data["sources"][0]["title"])
+
 
 if __name__ == "__main__":
     unittest.main()

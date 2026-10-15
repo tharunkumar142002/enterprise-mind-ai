@@ -41,6 +41,24 @@ class ManifestError(ValueError):
     """Manifest cannot be safely interpreted."""
 
 
+def validate_unicode(value: Any) -> None:
+    """Reject surrogate code points in all JSON strings, including object keys."""
+    pending = [value]
+    seen: set[int] = set()
+    while pending:
+        item = pending.pop()
+        if isinstance(item, str):
+            if any(0xD800 <= ord(char) <= 0xDFFF for char in item):
+                raise ManifestError("invalid Unicode scalar value: surrogate code point")
+        elif isinstance(item, (dict, list)) and id(item) not in seen:
+            seen.add(id(item))
+            if isinstance(item, dict):
+                pending.extend(item.keys())
+                pending.extend(item.values())
+            else:
+                pending.extend(item)
+
+
 def https_url(value: Any, label: str) -> str:
     """Require credential-free HTTPS DNS URLs; no local hosts or signed queries."""
     if not isinstance(value, str) or not value or len(value) > 2048:
@@ -121,6 +139,7 @@ class Manifest:
 
 def validate_manifest(value: Any) -> Manifest:
     """Reject unknown/missing fields, ambiguous types and unsafe identifiers."""
+    validate_unicode(value)
     root = _object(value, {"schema_version", "manifest_id", "researched_on",
                            "allowlisted_urls", "sources"}, "manifest")
     if type(root["schema_version"]) is not int or root["schema_version"] != 1:

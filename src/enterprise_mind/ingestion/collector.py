@@ -5,18 +5,20 @@ import ipaddress
 import json
 import math
 import os
+import re
 import socket
 import ssl
 import tempfile
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from email.message import Message
 from http.client import HTTPException, HTTPSConnection, HTTPResponse
 from pathlib import Path
 from queue import Empty, Queue
-from threading import Thread, Timer
+from threading import Event, Thread, Timer
 from typing import Any, ContextManager, Protocol
 from urllib.parse import urlsplit
 from uuid import NAMESPACE_URL, uuid5
@@ -31,6 +33,7 @@ from enterprise_mind.ingestion.manifest import (
     https_url,
     validate_manifest,
 )
+from enterprise_mind.ingestion.provenance import MAX_RECORD_BYTES, load_record, validate_record
 
 
 class CollectionError(ValueError):
@@ -38,6 +41,7 @@ class CollectionError(ValueError):
 
 
 class Response(Protocol):
+    """A transport must signal incomplete bodies as errors, never as clean EOF."""
     status: int
     headers: dict[str, str]
 
@@ -47,6 +51,39 @@ class Response(Protocol):
 
 
 Transport = Callable[[str, float], ContextManager[Response]]
+
+
+def _validated_headers(
+    pairs: Iterable[tuple[str, str]], *, require_length: bool = False,
+) -> dict[str, str]:
+    """Accept only a single decimal Content-Length as HTTP body framing.
+
+    Transfer coding (including chunked) and connection-close framing are not
+    supported by the HTTPS transport. Injected non-HTTP transports own their
+    completion guarantee and may supply complete bodies without a length.
+    """
+    headers: dict[str, str] = {}
+    for key, value in pairs:
+        if (not isinstance(key, str) or not isinstance(value, str)
+                or not re.fullmatch(r"[!#$%&'*+.^_`|~0-9A-Za-z-]+", key)
+                or any(ord(char) < 32 and char != "\t" or ord(char) == 127 for char in value)):
+            raise CollectionError("malformed HTTP headers")
+        key = key.lower()
+        if key in headers and key in {
+            "content-length", "transfer-encoding", "content-type", "content-encoding",
+        }:
+            raise CollectionError("ambiguous HTTP headers")
+        headers[key] = value.strip(" \t")
+    if "transfer-encoding" in headers:
+        if "content-length" in headers:
+            raise CollectionError("conflicting Transfer-Encoding and Content-Length")
+        raise CollectionError("unsupported Transfer-Encoding")
+    length = headers.get("content-length")
+    if length is not None and not re.fullmatch(r"[0-9]{1,10}", length):
+        raise CollectionError("invalid Content-Length")
+    if require_length and length is None:
+        raise CollectionError("HTTP response requires Content-Length framing")
+    return headers
 
 
 def public_addresses(host: str, timeout: float) -> list[str]:
@@ -112,13 +149,18 @@ class _HTTPResponse:
     tls_socket: socket.socket
     status: int
     headers: dict[str, str]
+    check_deadline: Callable[[], None]
 
     def read(self, size: int) -> bytes:
         # One underlying read prevents a slow stream from resetting an unbounded
         # read(size) loop's timeout. The collection loop also enforces a deadline.
-        return self.response.read1(size)
+        self.check_deadline()
+        chunk = self.response.read1(size)
+        self.check_deadline()
+        return chunk
 
     def set_timeout(self, timeout: float) -> None:
+        self.check_deadline()
         self.tls_socket.settimeout(timeout)
 
 
@@ -136,8 +178,14 @@ def open_https(url: str, timeout: float) -> Iterator[Response]:
     connection = _PinnedHTTPSConnection(parsed.hostname, addresses[0], remaining)
     response: HTTPResponse | None = None
     active_sockets: list[socket.socket] = []
+    expired = Event()
+
+    def check_deadline() -> None:
+        if expired.is_set() or time.monotonic() - started >= timeout:
+            raise CollectionError("download deadline exceeded")
 
     def expire() -> None:
+        expired.set()
         active = active_sockets[-1] if active_sockets else connection.sock
         if active is not None:
             try:
@@ -167,18 +215,22 @@ def open_https(url: str, timeout: float) -> Iterator[Response]:
             raise CollectionError("request timed out during connection")
         tls_socket.settimeout(remaining)
         response = connection.getresponse()
-        headers: dict[str, str] = {}
-        for key, value in response.getheaders():
-            key = key.lower()
-            if key in headers and key in {"content-length", "content-type", "content-encoding"}:
-                raise CollectionError("ambiguous HTTP headers")
-            headers[key] = value
-        yield _HTTPResponse(response, tls_socket, response.status, headers)
+        check_deadline()
+        if isinstance(response.headers, Message) and response.headers.defects:
+            raise CollectionError("malformed HTTP headers")
+        headers = _validated_headers(response.getheaders(), require_length=response.status == 200)
+        yield _HTTPResponse(response, tls_socket, response.status, headers, check_deadline)
+        check_deadline()
+    except (OSError, HTTPException):
+        check_deadline()
+        raise
     finally:
         watchdog.cancel()
+        watchdog.join()
         if response is not None:
             response.close()
         connection.close()
+    check_deadline()
 
 
 def safe_path(workspace: Path, path: Path, *, directory: bool = False) -> Path:
@@ -205,7 +257,10 @@ def safe_path(workspace: Path, path: Path, *, directory: bool = False) -> Path:
     return cursor
 
 
-def _write_immutable(workspace: Path, target: Path, data: bytes) -> bool:
+def _write_immutable(
+    workspace: Path, target: Path, data: bytes, *,
+    before_publish: Callable[[], Any] | None = None,
+) -> bool:
     """Publish without overwriting; callers own the per-output collection lock."""
     target = safe_path(workspace, target)
     safe_path(workspace, target.parent, directory=True).mkdir(parents=True, exist_ok=True)
@@ -221,7 +276,10 @@ def _write_immutable(workspace: Path, target: Path, data: bytes) -> bool:
             stream.flush()
             os.fsync(stream.fileno())
         # Hard-link publication is atomic and never replaces an existing file.
-        os.link(temporary, safe_path(workspace, target))
+        publish_target = safe_path(workspace, target)
+        if before_publish is not None:
+            before_publish()
+        os.link(temporary, publish_target)
     finally:
         temporary.unlink(missing_ok=True)
     return True
@@ -253,28 +311,32 @@ def _download_one(
     checksum = hashlib.sha256()
     count = 0
     deadline = time.monotonic() + timeout
+
+    def check_deadline() -> float:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise CollectionError("download deadline exceeded")
+        return remaining
+
     try:
         with os.fdopen(descriptor, "wb") as stream, transport(source.url, timeout) as response:
             if response.status != 200:
                 raise CollectionError(
                     f"HTTP {response.status}: redirects and non-200 responses rejected"
                 )
-            content_type = response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+            headers = _validated_headers(response.headers.items())
+            content_type = headers.get("content-type", "").split(";", 1)[0].strip().lower()
             if content_type not in FORMAT_MIME_TYPES[source.format]:
                 raise CollectionError("response Content-Type does not match approved format")
-            if response.headers.get("content-encoding", "identity").lower() != "identity":
+            if headers.get("content-encoding", "identity").lower() != "identity":
                 raise CollectionError("compressed transfer content is unsupported")
-            length = response.headers.get("content-length")
-            if length is not None and (not length.isascii() or not length.isdecimal()):
-                raise CollectionError("invalid Content-Length")
+            length = headers.get("content-length")
             if length is not None and int(length) > limit:
                 raise CollectionError("declared download size exceeds limit")
             while True:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise CollectionError("download deadline exceeded")
-                response.set_timeout(remaining)
+                response.set_timeout(check_deadline())
                 chunk = response.read(min(64 * 1024, limit - count + 1))
+                check_deadline()
                 if not chunk:
                     break
                 count += len(chunk)
@@ -288,8 +350,8 @@ def _download_one(
                 raise CollectionError("empty or truncated response")
             stream.flush()
             os.fsync(stream.fileno())
-            transfer = {key: response.headers[key] for key in ("etag", "last-modified")
-                        if key in response.headers}
+            transfer = {key: headers[key] for key in ("etag", "last-modified") if key in headers}
+        check_deadline()
         digest = checksum.hexdigest()
         if source.expected_sha256 is not None and digest != source.expected_sha256:
             raise CollectionError("download does not match pinned SHA-256")
@@ -299,6 +361,7 @@ def _download_one(
         if duplicate_content:
             _check_existing_blob(blob, digest, limit)
         else:
+            check_deadline()
             os.link(temporary, blob)
         document_id = str(uuid5(NAMESPACE_URL, f"{source.url}#sha256={digest}"))
         record_path = safe_path(workspace, output / "records" / source.source_id /
@@ -307,7 +370,8 @@ def _download_one(
             for key in ("license", "notices"):
                 artifact = preservation[key]
                 path = output / "licenses" / f"{artifact['sha256']}.txt"
-                _write_immutable(workspace, path, artifact["text"].encode("utf-8"))
+                _write_immutable(workspace, path, artifact["text"].encode("utf-8"),
+                                 before_publish=check_deadline)
                 artifact["path"] = path.relative_to(workspace).as_posix()
         record = {
             "schema_version": 1, "document_id": document_id,
@@ -328,21 +392,24 @@ def _download_one(
             record["license_preservation"] = preservation
             if "source_metadata" in preservation:
                 record["provenance"]["source_metadata"] = preservation["source_metadata"]
+        validate_record(record, manifest)
         if record_path.exists():
-            if record_path.stat().st_size > 1_048_576:
-                raise CollectionError("existing metadata exceeds size limit")
-            existing = json.loads(record_path.read_text(encoding="utf-8"))
+            with record_path.open("rb") as record_stream:
+                existing = load_record(record_stream.read(MAX_RECORD_BYTES + 1))
+            validate_record(existing, manifest)
             stable_fields = {key: value for key, value in record.items()
                              if key not in {"collected_at", "transfer"}}
-            if (not isinstance(existing, dict)
-                    or {key: value for key, value in existing.items()
-                        if key not in {"collected_at", "transfer"}} != stable_fields):
+            existing_fields = {key: value for key, value in existing.items()
+                               if key not in {"collected_at", "transfer"}}
+            if (json.dumps(existing_fields, sort_keys=True)
+                    != json.dumps(stable_fields, sort_keys=True)):
                 raise CollectionError("existing metadata failed integrity checks")
             status = "already_collected"
         else:
             record_bytes = (json.dumps(record, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-            _write_immutable(workspace, record_path, record_bytes)
+            _write_immutable(workspace, record_path, record_bytes, before_publish=check_deadline)
             status = "collected"
+        check_deadline()
         return {"source_id": source.source_id, "document_id": document_id,
                 "status": status, "duplicate_content": duplicate_content,
                 "record_path": record_path.relative_to(workspace).as_posix()}

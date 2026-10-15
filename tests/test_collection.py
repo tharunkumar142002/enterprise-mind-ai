@@ -172,6 +172,61 @@ class CollectionTests(unittest.TestCase):
                 self.run_collection()
         self.assert_no_published_documents()
 
+    def test_framing_conflicts_and_malformed_headers_never_publish(self) -> None:
+        for framing in (
+            {"transfer-encoding": "chunked", "content-length": "1"},
+            {"transfer-encoding": "chunked"},
+            {"Content-Length": "1", "content-length": "1"},
+            {"content-length": "1, 1"}, {"content-length": "+1"},
+            {"content-length": "\u0661"}, {"content-length": "9" * 100},
+            {"content-length": "1\r\nContent-Length: 2"},
+        ):
+            with self.subTest(framing=framing):
+                self.transport = FakeTransport(headers={"content-type": "text/plain", **framing})
+                with self.assertRaises(CollectionError):
+                    self.run_collection()
+                self.assert_no_published_documents()
+
+    def test_deadline_expiring_during_final_bytes_or_eof_never_publishes(self) -> None:
+        original_read = MemoryResponse.read
+        for final_read in ("bytes", "eof"):
+            now = [0]
+
+            def delayed_read(response, size):
+                chunk = original_read(response, size)
+                if final_read == "bytes" or not chunk:
+                    now[0] = 16
+                return chunk
+
+            headers = {"content-type": "text/plain"}
+            if final_read == "bytes":
+                headers["content-length"] = str(len(PAYLOAD))
+            self.transport = FakeTransport(headers=headers)
+            with self.subTest(final_read=final_read):
+                with patch("enterprise_mind.ingestion.collector.time.monotonic",
+                           side_effect=lambda: now[0]):
+                    with patch.object(MemoryResponse, "read", delayed_read):
+                        with self.assertRaisesRegex(CollectionError, "deadline"):
+                            self.run_collection()
+                self.assert_no_published_documents()
+
+    def test_deadline_expiring_during_flush_never_publishes(self) -> None:
+        now = [0]
+        flushes = [0]
+
+        def delayed_fsync(descriptor):
+            flushes[0] += 1
+            if flushes[0] > 1:
+                now[0] = 16
+
+        with patch("enterprise_mind.ingestion.collector.time.monotonic",
+                   side_effect=lambda: now[0]):
+            # The manifest is published before the per-download budget starts.
+            with patch("enterprise_mind.ingestion.collector.os.fsync", delayed_fsync):
+                with self.assertRaisesRegex(CollectionError, "deadline"):
+                    self.run_collection()
+        self.assert_no_published_documents()
+
     def test_tampered_metadata_rejected(self) -> None:
         result = self.run_collection()[0]
         path = self.workspace / result["record_path"]
