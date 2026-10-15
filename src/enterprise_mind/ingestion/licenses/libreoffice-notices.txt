@@ -1,0 +1,17 @@
+LibreOffice Writer Guide 25.2 - Preface
+Copyright (c) 2025 LibreOffice Documentation Team.
+Contributor to this edition: Jean Hollis Weber.
+Contributors to previous editions: Jean Hollis Weber, Rafael Lima, Kees Kriek,
+Bruce Byfield, Gillian Polack.
+Original source and copyright evidence: https://books.libreoffice.org/en/WG252/WG2500-Preface.html
+Published February 2025; based on LibreOffice 25.2 Community.
+The publisher permits distribution/modification under GNU GPL version 3 or later
+OR Creative Commons Attribution version 4.0 or later. This project selects
+CC-BY-4.0 for this documentation; the software license is separate.
+Full selected terms: https://creativecommons.org/licenses/by/4.0/legalcode.txt
+Retain copyright, contributor attribution, source and license links and supplied
+notices; identify modifications and retain indications of previous changes.
+Do not imply endorsement or add restrictions/DRM. Trademarks belong to their owners.
+Only the preface is selected; linked chapters and assets are not authorized.
+This notice is a project-authored attribution/review summary, not replacement terms.
+Reviewed: 2026-10-11. Changes: none; original bytes must remain unchanged.

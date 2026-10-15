@@ -16,6 +16,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
+[project.scripts]
+enterprise-mind-collect = "enterprise_mind.ingestion.__main__:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
@@ -23,6 +26,9 @@ package-dir = {"" = "src"}
 where = ["src"]
 include = ["enterprise_mind*"]
 namespaces = false
+
+[tool.setuptools.package-data]
+"enterprise_mind.ingestion" = ["licenses/*.txt", "templates/*.json"]
 
 # Tool configuration only: these tools are not installed or dependencies yet.
 [tool.ruff]

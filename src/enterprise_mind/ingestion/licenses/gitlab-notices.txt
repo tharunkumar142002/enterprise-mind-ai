@@ -1,0 +1,16 @@
+GitLab People Group public handbook
+Attribution: GitLab public handbook contributors.
+Original source: https://handbook.gitlab.com/handbook/people-group/
+Publisher license statement: https://handbook.gitlab.com/handbook/about/handbook-usage/
+Applicable terms: Creative Commons Attribution-ShareAlike 4.0 International.
+Full terms: https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt
+Retain supplied copyright and attribution notices, source and license links,
+warranty disclaimers and modification notices. Distributed adaptations must use
+the same or a compatible license. Do not impose additional license restrictions
+or technological measures. No GitLab endorsement or trademark rights are granted.
+No document-specific copyright year has been asserted by this project.
+Privacy review remains open: exclude individual handles, profiles, contact-routing
+details and internal destinations from later retrieval/distribution. Do not crawl
+linked pages, calendars, complaint forms, employee records or confidential issues.
+This notice is a project-authored attribution/review summary, not replacement terms.
+Reviewed: 2026-10-11. Changes: none; original bytes must remain unchanged.

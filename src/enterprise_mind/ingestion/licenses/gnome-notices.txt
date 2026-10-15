@@ -1,0 +1,14 @@
+GNOME Help: Network problems
+Author credit: The Ubuntu Documentation Team.
+Original source: https://help.gnome.org/gnome-help/net-problem.html
+Source evidence: https://github.com/GNOME/gnome-user-docs/blob/master/gnome-help/C/net-problem.page
+License inclusion evidence: https://github.com/GNOME/gnome-user-docs/blob/master/gnome-help/C/legal.xml
+The page source explicitly includes legal.xml via XInclude. That file states:
+This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
+Applicable full terms: https://creativecommons.org/licenses/by-sa/3.0/legalcode.txt
+Retain author credit, supplied copyright notices, license and source links and
+disclaimers. Mark modifications; distributed adaptations require this license
+or a permitted compatible license. Do not impose additional restrictions or DRM.
+No copyright year or individual author names have been invented.
+This notice is a project-authored attribution/review summary, not replacement terms.
+Reviewed: 2026-10-11. Changes: none; original bytes must remain unchanged.

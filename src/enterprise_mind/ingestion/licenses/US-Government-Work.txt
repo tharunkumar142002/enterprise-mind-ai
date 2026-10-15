@@ -1,0 +1,24 @@
+U.S. Government work reuse basis and exclusions
+
+This is a public-domain/reuse notice, not a Creative Commons or SPDX license grant.
+LicenseRef-US-Government-Work is this project's local identifier for this basis.
+Evidence: https://www.govinfo.gov/about/policies
+
+17 U.S.C. 105 states:
+Copyright protection under this title is not available for any work of the
+United States Government, but the United States Government is not precluded
+from receiving and holding copyrights transferred to it by assignment,
+bequest, or otherwise.
+
+GovInfo explains that U.S. Government work means work prepared by an officer
+or employee as part of official duties. Government publications may contain
+copyrighted material used with permission; publication does not authorize reuse
+of that material without the owner's consent. Consult the originating agency
+where clearance is uncertain. Give customary credit to the originating agency.
+Licensed website images are not automatically public domain.
+
+The reviewed basis covers the selected U.S. federal regulatory text. Preserve
+any item-specific notices in the original PDF. Quarantine unexpected third-party
+material for review; do not extend this basis to other assets or jurisdictions.
+No endorsement, trademark rights or claim of current legal authority is granted.
+Reviewed: 2026-10-11.
